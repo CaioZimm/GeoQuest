@@ -1,5 +1,5 @@
-from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi import FastAPI
 
 from app.routes.challenge_routes import router as challenge_router
 from app.database.connection import engine
