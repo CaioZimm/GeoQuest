@@ -82,7 +82,7 @@ def process_guess(db: Session, request: schemas.GuessRequest):
             next_clue = clues[next_index].text
             return schemas.GuessResponse(
                 correct=False,
-                message=f"Não é o {request.guess}.",
+                message=f"Não é {request.guess}.",
                 next_clue=next_clue
             )
         else:
