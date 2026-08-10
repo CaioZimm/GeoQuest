@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, ForeignKey, Date
+from sqlalchemy import Column, Integer, String, ForeignKey, Date, Float
 from app.database.connection import Base
 from sqlalchemy.orm import relationship
 
@@ -11,7 +11,7 @@ class Country(Base):
     continent = Column(String)
     capital = Column(String)
     population = Column(Integer)
-    area = Column(Integer)
+    area = Column(Float)
 
     clues = relationship("Clue", back_populates="country", cascade="all, delete-orphan")
     challenges = relationship("DailyChallenge", back_populates="country")
