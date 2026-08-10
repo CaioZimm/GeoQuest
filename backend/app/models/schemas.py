@@ -28,3 +28,4 @@ class GuessResponse(BaseModel):
     message: str
     next_clue: Optional[str] = None
     country: Optional[CountryBase] = None
+    all_clues: Optional[list[str]] = None

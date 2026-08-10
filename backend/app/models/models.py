@@ -1,6 +1,6 @@
 from sqlalchemy import Column, Integer, String, ForeignKey, Date
-from sqlalchemy.orm import relationship
 from app.database.connection import Base
+from sqlalchemy.orm import relationship
 
 class Country(Base):
     __tablename__ = "countries"
