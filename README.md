@@ -73,12 +73,12 @@ source venv/bin/activate
 # Instale as dependências
 pip install -r requirements.txt
 
-# Execute as migrações e popule o banco de dados com os 183 países
+# Execute as migrações e popule o banco de dados com os países
 alembic upgrade head
 python -m app.database.seed
 
 # Inicie o servidor FastAPI na porta 8000
-uvicorn app.main:app --reload --port 8000
+uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
 ```
 
 ### 3. Configurando o Frontend (Web)
@@ -94,8 +94,3 @@ npm run dev
 ```
 
 Pronto! Acesse a aplicação acessando [http://localhost:3000](http://localhost:3000) no seu navegador.
-
----
-<div align="center">
-  Desenvolvido com 🌎 e 💻
-</div>
