@@ -29,3 +29,16 @@ class GuessResponse(BaseModel):
     next_clue: Optional[str] = None
     country: Optional[CountryBase] = None
     all_clues: Optional[list[str]] = None
+
+class RegisterRequest(BaseModel):
+    email: str
+    password: str
+    name: str = None
+
+class LoginRequest(BaseModel):
+    email: str
+    password: str
+
+class GoogleLoginRequest(BaseModel):
+    email: str
+    name: str = None
