@@ -1,6 +1,9 @@
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, Header
 from sqlalchemy.orm import Session
+from zoneinfo import ZoneInfo
+from datetime import datetime
 
+from app.dependencies import get_current_user_id
 from app.controllers import challenge_controller
 from app.database.connection import get_db
 from app.models import schemas
@@ -17,5 +20,11 @@ def get_all_countries(db: Session = Depends(get_db)):
     return challenge_controller.list_all_countries(db)
 
 @router.post("/daily-challenge/guess", response_model=schemas.GuessResponse)
-def guess_country(request: schemas.GuessRequest, db: Session = Depends(get_db)):
-    return challenge_controller.process_guess(db, request)
+def guess_country(request: schemas.GuessRequest, db: Session = Depends(get_db), authorization: str = Header(None)):
+    user_id = get_current_user_id(authorization)
+    return challenge_controller.process_guess(db, request, user_id)
+
+@router.get("/progress/today")
+def get_today_progress(db: Session = Depends(get_db), authorization: str = Header(None)):
+    user_id = get_current_user_id(authorization)
+    return challenge_controller.get_progress(db, user_id)
