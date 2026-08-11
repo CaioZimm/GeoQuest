@@ -1,9 +1,11 @@
-import { useState, useEffect } from "react";
-import { fetchDailyChallenge, submitGuess, fetchCountries } from "@/services/gameService";
+import { fetchDailyChallenge, submitGuess, fetchCountries, fetchTodayProgress } from "@/services/gameService";
 import type { DailyChallenge } from "@/models/DailyChallenge";
 import type { Country } from "@/models/Country";
+import { useSession } from "next-auth/react";
+import { useState, useEffect } from "react";
 
 export function useGameState() {
+  const { data: session, status } = useSession();
   const [loading, setLoading] = useState(true);
   const [challenge, setChallenge] = useState<DailyChallenge | null>(null);
   const [clues, setClues] = useState<string[]>([]);
@@ -18,20 +20,73 @@ export function useGameState() {
   const [allCountries, setAllCountries] = useState<string[]>([]);
   const [filteredCountries, setFilteredCountries] = useState<string[]>([]);
   const [showAutocomplete, setShowAutocomplete] = useState(false);
-  const [gameSeed, setGameSeed] = useState<string | null>(null);
+  const [playedToday, setPlayedToday] = useState(false);
 
   useEffect(() => {
+    if (status === "loading") return;
+
     const fetchData = async () => {
       try {
         setLoading(true);
+        const token = session ? (session as unknown as { token: string }).token : null;
+
+        let hasPlayed = false;
+        let savedResult: { state: "won" | "lost", country: Country, cluesUsed: number, clues: string[] } | null = null;
+
+        try {
+          const localData = localStorage.getItem("geoquest_last_played_result");
+          if (localData) {
+            const parsed = JSON.parse(localData);
+            const todayStr = new Date().toISOString().split("T")[0];
+            if (parsed.date === todayStr) {
+              savedResult = parsed;
+              if (!token) hasPlayed = true;
+            }
+          }
+        } catch (e) {}
+
+        if (token) {
+          const progress = await fetchTodayProgress(token);
+          hasPlayed = progress.played_today;
+          if (hasPlayed && progress.country) {
+            savedResult = {
+              state: progress.won ? "won" : "lost",
+              country: progress.country,
+              cluesUsed: progress.clues_used,
+              clues: progress.all_clues
+            };
+          }
+        } else if (!hasPlayed) {
+          const localDate = localStorage.getItem("geoquest_last_played");
+          const todayStr = new Date().toISOString().split("T")[0];
+          if (localDate === todayStr) hasPlayed = true;
+        }
+
+        setPlayedToday(hasPlayed);
+
+        if (hasPlayed && savedResult) {
+          setGameState(savedResult.state);
+          setCountry(savedResult.country);
+          setCluesUsedCount(savedResult.cluesUsed);
+          if (savedResult.clues) setClues(savedResult.clues);
+          setIsModalOpen(true);
+        } else if (hasPlayed && !savedResult) {
+          setGameState("won");
+          setIsModalOpen(true);
+        }
+
         const [data, countriesList] = await Promise.all([
-          fetchDailyChallenge(gameSeed),
+          fetchDailyChallenge(null),
           fetchCountries()
         ]);
 
         setChallenge(data);
         setAllCountries(countriesList);
-        setClues([data.first_clue]);
+        
+        if (!hasPlayed || !savedResult?.clues) {
+          setClues([data.first_clue]);
+        }
+        
         setLoading(false);
       } catch (err) {
         console.error(err);
@@ -40,7 +95,7 @@ export function useGameState() {
       }
     };
     fetchData();
-  }, [gameSeed]);
+  }, [session, status]);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const val = e.target.value;
@@ -81,7 +136,24 @@ export function useGameState() {
     setErrorMsg("");
 
     try {
-      const data = await submitGuess(guess.trim(), clues.length, gameSeed);
+      const token = session ? (session as any).token : null;
+      const data = await submitGuess(guess.trim(), clues.length, null, token);
+
+      const markPlayed = (finalState: "won" | "lost", finalCountry: Country, finalCluesUsed: number, finalClues: string[]) => {
+        const todayStr = new Date().toISOString().split("T")[0];
+        const resultData = {
+          date: todayStr,
+          state: finalState,
+          country: finalCountry,
+          cluesUsed: finalCluesUsed,
+          clues: finalClues
+        };
+        localStorage.setItem("geoquest_last_played_result", JSON.stringify(resultData));
+        if (!token) {
+          localStorage.setItem("geoquest_last_played", todayStr);
+        }
+        setPlayedToday(true);
+      };
 
       if (data.correct) {
         setGameState("won");
@@ -89,6 +161,7 @@ export function useGameState() {
         setCluesUsedCount(clues.length);
         setIsModalOpen(true);
         if (data.all_clues) setClues(data.all_clues);
+        markPlayed("won", data.country, clues.length, data.all_clues || clues);
       } else {
         if (data.next_clue) {
           setClues([...clues, data.next_clue]);
@@ -100,6 +173,7 @@ export function useGameState() {
           setCluesUsedCount(clues.length);
           setIsModalOpen(true);
           if (data.all_clues) setClues(data.all_clues);
+          markPlayed("lost", data.country, clues.length, data.all_clues || clues);
         }
       }
       setGuess("");
@@ -111,21 +185,8 @@ export function useGameState() {
     }
   };
 
-  const resetGame = () => {
-    setGameSeed(Math.random().toString(36).substring(7));
-    setLoading(true);
-    setGameState("playing");
-    setIsModalOpen(false);
-    setCluesUsedCount(1);
-    setGuess("");
-    setErrorMsg("");
-    setCountry(null);
-    setChallenge(null);
-    setClues([]);
-  };
-
   return {
-    loading,
+    loading: loading || status === "loading",
     challenge,
     clues,
     cluesUsedCount,
@@ -139,9 +200,9 @@ export function useGameState() {
     filteredCountries,
     showAutocomplete,
     setShowAutocomplete,
+    playedToday,
     handleInputChange,
     handleSelectCountry,
-    handleGuess,
-    resetGame
+    handleGuess
   };
 }

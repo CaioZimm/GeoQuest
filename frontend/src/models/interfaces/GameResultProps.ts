@@ -5,6 +5,5 @@ export interface GameResultProps {
     country: Country;
     cluesUsed: number;
     totalClues: number;
-    resetGame: () => void;
     onClose: () => void;
 }

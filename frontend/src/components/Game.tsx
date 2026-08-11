@@ -2,8 +2,12 @@
 
 import { useGameState } from "@/hooks/useGameState";
 import { AutocompleteInput } from "./AutocompleteInput";
+import { useSession, signOut } from "next-auth/react";
+import { User, LogOut } from "lucide-react";
 import { GameResult } from "./GameResult";
+import { AuthModal } from "./AuthModal";
 import { ClueList } from "./ClueList";
+import { useState } from "react";
 
 export default function Game() {
   const {
@@ -23,9 +27,11 @@ export default function Game() {
     setShowAutocomplete,
     handleInputChange,
     handleSelectCountry,
-    handleGuess,
-    resetGame
+    handleGuess
   } = useGameState();
+
+  const { data: session } = useSession();
+  const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
 
   if (loading) {
     return (
@@ -39,13 +45,25 @@ export default function Game() {
 
   return (
     <div className="w-full max-w-[500px] flex flex-col mx-auto px-4">
-      <header className="flex items-center justify-between py-3 border-b border-gray-700 mb-6">
+      <header className="flex items-center justify-between py-3 border-b border-emerald-900/40 mb-6 relative">
         <div className="w-8"></div>
-        <h1 className="text-3xl font-bold tracking-wider uppercase text-white flex items-center gap-2 mt-2">
+        <h1 className="text-3xl font-bold tracking-wider uppercase text-white text-center">
           GEOQUEST
         </h1>
-        <div className="w-8"></div>
+        <div className="w-8 flex justify-end">
+          {session ? (
+            <button onClick={() => signOut()} className="text-gray-400 hover:text-white transition-colors" title="Sair">
+              <LogOut className="w-6 h-6" />
+            </button>
+          ) : (
+            <button onClick={() => setIsAuthModalOpen(true)} className="text-gray-400 hover:text-white transition-colors cursor-pointer" title="Entrar">
+              <User className="w-6 h-6" />
+            </button>
+          )}
+        </div>
       </header>
+
+      <AuthModal isOpen={isAuthModalOpen} onClose={() => setIsAuthModalOpen(false)} />
 
       {/* Input Area */}
       {gameState === "playing" && (
@@ -69,15 +87,9 @@ export default function Game() {
         <div className="mb-6 flex flex-col gap-2">
           <button
             onClick={() => setIsModalOpen(true)}
-            className="w-full bg-blue-600 hover:bg-blue-500 text-white font-bold py-3 px-4 rounded-lg uppercase tracking-wide transition-colors flex items-center justify-center gap-2 shadow-lg cursor-pointer"
+            className="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-3 px-4 rounded-lg uppercase tracking-wide transition-colors flex items-center justify-center gap-2 shadow-lg cursor-pointer shadow-emerald-900/20"
           >
             📊 Ver Estatísticas
-          </button>
-          <button
-            onClick={resetGame}
-            className="w-full bg-[#3a3a3c] hover:bg-gray-600 text-white font-bold py-2.5 px-4 rounded-lg uppercase text-sm tracking-wide transition-colors cursor-pointer"
-          >
-            Jogar Novamente
           </button>
         </div>
       )}
@@ -89,7 +101,6 @@ export default function Game() {
           country={country}
           cluesUsed={cluesUsedCount}
           totalClues={totalClues}
-          resetGame={resetGame}
           onClose={() => setIsModalOpen(false)}
         />
       )}
@@ -97,7 +108,7 @@ export default function Game() {
       {/* Clues List */}
       <ClueList clues={clues} totalClues={totalClues} />
 
-      <footer className="mt-12 text-center text-xs text-gray-500 pb-8 border-t border-gray-800 pt-4">
+      <footer className="mt-12 text-center text-xs text-emerald-300/50 pb-8 border-t border-emerald-900/40 pt-4">
         GEOQUEST - Jogo de geografia diário
         <br />Teste seus conhecimentos com este jogo.
       </footer>

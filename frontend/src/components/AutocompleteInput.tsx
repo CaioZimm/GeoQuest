@@ -2,7 +2,7 @@ import { motion, useAnimation } from "framer-motion";
 import { useEffect, useState, useRef } from "react";
 
 import { AutocompleteInputProps } from "@/models/interfaces/AutocompleteInputProps";
-import { Globe2 } from "lucide-react";
+import { Search, Globe2 } from "lucide-react";
 
 export function AutocompleteInput({
   guess,
@@ -20,10 +20,15 @@ export function AutocompleteInput({
   const controls = useAnimation();
   const [selectedIndex, setSelectedIndex] = useState<number>(-1);
   const listRef = useRef<HTMLUListElement>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
-    setSelectedIndex(-1);
-  }, [guess, filteredCountries]);
+    if (!guessing && inputRef.current) {
+      inputRef.current.focus();
+    }
+  }, [guessing]);
+
+
 
   useEffect(() => {
     if (errorMsg) {
@@ -79,8 +84,8 @@ export function AutocompleteInput({
     return (
       <span>
         {before}
-        <strong className="text-white font-black underline decoration-blue-500/50">{matched}</strong>
-        <span className="text-gray-300 font-medium">{after}</span>
+        <strong className="text-white font-black underline decoration-emerald-500/50">{matched}</strong>
+        <span className="text-emerald-100 font-medium">{after}</span>
       </span>
     );
   };
@@ -95,24 +100,28 @@ export function AutocompleteInput({
       <div className="flex gap-2">
         <div className="relative flex-1">
           <input
+            ref={inputRef}
             type="text"
             value={guess}
-            onChange={handleInputChange}
+            onChange={(e) => {
+              setSelectedIndex(-1);
+              handleInputChange(e);
+            }}
             onKeyDown={handleKeyDown}
             onFocus={() => { if (guess) setShowAutocomplete(true); }}
             onBlur={() => setTimeout(() => setShowAutocomplete(false), 200)}
             placeholder="Digite o nome do país..."
-            className="w-full bg-[#272729] border border-gray-600 rounded-lg p-3.5 text-white focus:outline-none focus:border-green-900 uppercase font-bold text-sm tracking-wide transition-colors"
+            className="w-full bg-[#0a1a10] border border-emerald-800/60 rounded-xl p-4 pl-12 text-white shadow-xl shadow-black/50 focus:outline-none focus:border-emerald-500 transition-colors disabled:opacity-50"
             disabled={guessing}
-            autoFocus
             autoComplete="off"
           />
+          <Search className="w-5 h-5 text-emerald-500/70 absolute left-4 top-4" />
 
           {/* Menu Autocomplete */}
           {showAutocomplete && filteredCountries.length > 0 && (
             <ul
               ref={listRef}
-              className="absolute z-20 w-full bg-[#272729] border border-gray-600 mt-1 max-h-52 overflow-y-auto rounded-lg shadow-2xl divide-y divide-gray-700/50"
+              className="absolute w-full mt-2 bg-[#0c2214] border border-emerald-800/60 rounded-xl shadow-2xl max-h-60 overflow-y-auto z-50 py-2 custom-scrollbar"
             >
               {filteredCountries.map((c, idx) => {
                 const isSelected = idx === selectedIndex;
@@ -120,7 +129,7 @@ export function AutocompleteInput({
                   <li
                     key={c}
                     onMouseDown={() => handleSelectCountry(c)}
-                    className={`px-4 py-3 cursor-pointer text-sm transition-colors flex items-center justify-between ${isSelected ? "bg-[#444446] text-white border-l-4 border-blue-500 font-bold" : "hover:bg-[#3a3a3c] text-gray-200"
+                    className={`px-4 py-3 cursor-pointer text-sm transition-colors flex items-center justify-between ${isSelected ? "bg-[#10301d] text-white border-l-4 border-emerald-500 font-bold" : "hover:bg-[#0f2818] text-emerald-100/80"
                       }`}
                   >
                     {renderHighlightedName(c, guess)}
@@ -134,9 +143,15 @@ export function AutocompleteInput({
         <button
           type="submit"
           disabled={guessing || !guess.trim()}
-          className="bg-[#3a3a3c] hover:bg-[#565758] active:scale-95 border border-gray-600 text-white px-5 py-3.5 rounded-lg uppercase font-black text-sm tracking-wide transition-all disabled:opacity-50 flex items-center gap-2 cursor-pointer"
+          className="bg-emerald-600 hover:bg-emerald-500 disabled:bg-[#0c2214] disabled:text-emerald-700/50 disabled:border-emerald-900/50 disabled:border text-white px-6 rounded-xl font-bold uppercase tracking-wide transition-colors flex items-center gap-2 shadow-lg"
         >
-          <Globe2 className="w-5 h-5 text-blue-400" /> Adivinhar
+          {guessing ? (
+            <div className="w-5 h-5 border-2 border-white/20 border-t-white rounded-full animate-spin" />
+          ) : (
+            <>
+              <Globe2 className="w-5 h-5 text-emerald-300" /> Adivinhar
+            </>
+          )}
         </button>
       </div>
 

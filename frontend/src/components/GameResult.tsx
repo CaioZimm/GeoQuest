@@ -1,11 +1,33 @@
-import { useEffect } from "react";
-import { clsx } from "clsx";
-import { motion } from "framer-motion";
-import confetti from "canvas-confetti";
-import { X } from "lucide-react";
 import { GameResultProps } from "@/models/interfaces/GameResultProps";
+import { useEffect, useState } from "react";
+import confetti from "canvas-confetti";
+import { motion } from "framer-motion";
+import { X } from "lucide-react";
+import { clsx } from "clsx";
 
-export function GameResult({ gameState, country, cluesUsed, totalClues, resetGame, onClose }: GameResultProps) {
+export function GameResult({ gameState, country, cluesUsed, totalClues, onClose }: GameResultProps) {
+
+  const [timeUntilNext, setTimeUntilNext] = useState<string>("");
+
+  useEffect(() => {
+    const updateCountdown = () => {
+      const now = new Date();
+      const tomorrow = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1);
+      const diff = tomorrow.getTime() - now.getTime();
+
+      const h = Math.floor((diff / (1000 * 60 * 60)) % 24);
+      const m = Math.floor((diff / 1000 / 60) % 60);
+      const s = Math.floor((diff / 1000) % 60);
+
+      setTimeUntilNext(
+        `${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`
+      );
+    };
+
+    updateCountdown();
+    const interval = setInterval(updateCountdown, 1000);
+    return () => clearInterval(interval);
+  }, []);
 
   useEffect(() => {
     if (gameState === "won") {
@@ -45,72 +67,70 @@ export function GameResult({ gameState, country, cluesUsed, totalClues, resetGam
       <motion.div
         initial={{ opacity: 0, scale: 0.9, y: 20 }}
         animate={{ opacity: 1, scale: 1, y: 0 }}
-        className="relative w-full max-w-sm bg-[#272729] p-6 rounded-xl border border-gray-600 shadow-2xl flex flex-col items-center text-center"
+        className="relative w-full max-w-sm bg-[#0a2013] p-6 rounded-xl border border-emerald-800/60 shadow-2xl flex flex-col items-center text-center"
       >
         {/* Botão Fechar Modal */}
         <button
           onClick={onClose}
-          className="absolute top-4 right-4 text-gray-400 hover:text-white p-1 rounded-full hover:bg-gray-700/50 transition-colors cursor-pointer"
+          className="absolute top-4 right-4 text-emerald-300/70 hover:text-white p-1 rounded-full hover:bg-emerald-900/50 transition-colors cursor-pointer"
           title="Fechar"
         >
           <X className="w-5 h-5" />
         </button>
 
-        <h2 className={clsx("text-3xl font-black uppercase mb-2", gameState === "won" ? "text-green-500" : "text-red-500")}>
+        <h2 className={clsx("text-3xl font-black uppercase mb-2", gameState === "won" ? "text-emerald-400" : "text-red-500")}>
           {gameState === "won" ? "Você Acertou!" : "Fim de Jogo"}
         </h2>
 
-        <p className="text-lg text-gray-300 mb-6">
+        <p className="text-lg text-emerald-100 mb-6">
           O país era: <br /><span className="text-2xl font-black text-white">{country.name}</span>
         </p>
 
         <div className="w-full grid grid-cols-2 gap-3 mb-6">
-          <div className="bg-[#121213] p-3 rounded-lg border border-gray-700 flex flex-col items-center">
-            <span className="text-xs text-gray-400 font-bold uppercase mb-1">Pontos</span>
-            <span className={clsx("text-2xl font-black", gameState === "won" ? "text-green-400" : "text-gray-500")}>
+          <div className="bg-[#06180e] p-3 rounded-lg border border-emerald-900/60 flex flex-col items-center">
+            <span className="text-xs text-emerald-300/70 font-bold uppercase mb-1">Pontos</span>
+            <span className={clsx("text-2xl font-black", gameState === "won" ? "text-emerald-400" : "text-emerald-600/70")}>
               {earnedPoints}
             </span>
           </div>
-          <div className="bg-[#121213] p-3 rounded-lg border border-gray-700 flex flex-col items-center">
-            <span className="text-xs text-gray-400 font-bold uppercase mb-1">Pistas</span>
+          <div className="bg-[#06180e] p-3 rounded-lg border border-emerald-900/60 flex flex-col items-center">
+            <span className="text-xs text-emerald-300/70 font-bold uppercase mb-1">Pistas</span>
             <span className="text-2xl font-black text-white">{cluesUsed}/{totalClues}</span>
           </div>
 
           {/* Informações detalhadas do país */}
-          <div className="col-span-2 bg-[#121213] p-3.5 rounded-lg border border-gray-700 text-sm text-left flex flex-col gap-1.5">
-            <div className="flex justify-between border-b border-gray-800 pb-1">
-              <span className="text-gray-400">Capital:</span>
+          <div className="col-span-2 bg-[#06180e] p-3.5 rounded-lg border border-emerald-900/60 text-sm text-left flex flex-col gap-1.5">
+            <div className="flex justify-between border-b border-emerald-900/40 pb-1">
+              <span className="text-emerald-300/70">Capital:</span>
               <span className="font-semibold text-white">{country.capital || "N/A"}</span>
             </div>
-            <div className="flex justify-between border-b border-gray-800 pb-1">
-              <span className="text-gray-400">Continente:</span>
+            <div className="flex justify-between border-b border-emerald-900/40 pb-1">
+              <span className="text-emerald-300/70">Continente:</span>
               <span className="font-semibold text-white">{country.continent || "N/A"}</span>
             </div>
-            <div className="flex justify-between border-b border-gray-800 pb-1">
-              <span className="text-gray-400">População:</span>
+            <div className="flex justify-between border-b border-emerald-900/40 pb-1">
+              <span className="text-emerald-300/70">População:</span>
               <span className="font-semibold text-white">
                 {country.population ? country.population.toLocaleString("pt-BR") : "N/A"}
               </span>
             </div>
-            <div className="flex justify-between border-b border-gray-800 pb-1">
-              <span className="text-gray-400">Área:</span>
+            <div className="flex justify-between border-b border-emerald-900/40 pb-1">
+              <span className="text-emerald-300/70">Área:</span>
               <span className="font-semibold text-white">
                 {country.area ? `${country.area.toLocaleString("pt-BR")} km²` : "N/A"}
               </span>
             </div>
             <div className="flex justify-between">
-              <span className="text-gray-400">Código ISO:</span>
+              <span className="text-emerald-300/70">Código ISO:</span>
               <span className="font-semibold text-white uppercase">{country.code || "N/A"}</span>
             </div>
           </div>
         </div>
 
-        <button
-          onClick={resetGame}
-          className="w-full bg-[#3a3a3c] hover:bg-white hover:text-black border border-gray-600 text-white px-4 py-4 rounded-lg uppercase font-black tracking-wider transition-all cursor-pointer"
-        >
-          Jogar Novamente
-        </button>
+        <div className="w-full bg-[#06180e] border border-emerald-900/60 rounded-lg p-4 mt-2">
+          <p className="text-emerald-300/70 text-xs font-bold uppercase mb-1">Próximo país em</p>
+          <p className="text-white text-2xl font-black">{timeUntilNext}</p>
+        </div>
       </motion.div>
     </div>
   );
