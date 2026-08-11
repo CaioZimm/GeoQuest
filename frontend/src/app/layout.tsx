@@ -1,5 +1,6 @@
 import "./globals.css";
 
+import ClientProvider from "@/components/ClientProvider";
 import { Inter } from "next/font/google";
 import type { Metadata } from "next";
 
@@ -37,9 +38,11 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="pt-BR">
-      <body className={`${inter.variable} antialiased text-slate-50 min-h-screen selection:bg-blue-500/30`}>
-        {children}
+    <html lang="pt-BR" suppressHydrationWarning>
+      <body className={`${inter.variable} antialiased text-emerald-50 bg-[#0a150f] min-h-screen selection:bg-emerald-500/30`} suppressHydrationWarning>
+        <ClientProvider>
+          {children}
+        </ClientProvider>
       </body>
     </html>
   );
