@@ -42,3 +42,14 @@ class LoginRequest(BaseModel):
 class GoogleLoginRequest(BaseModel):
     email: str
     name: str = None
+
+class UpdateProfileRequest(BaseModel):
+    name: str
+    password: Optional[str] = None
+
+class UserStatsResponse(BaseModel):
+    played: int
+    win_rate: int
+    current_streak: int
+    max_streak: int
+    avg_guesses: float

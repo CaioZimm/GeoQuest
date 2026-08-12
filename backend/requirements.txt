@@ -8,4 +8,4 @@ pydantic-settings
 python-dotenv
 tzdata
 PyJWT
-passlib[bcrypt]
+bcrypt
