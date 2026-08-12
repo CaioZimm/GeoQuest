@@ -28,3 +28,8 @@ def guess_country(request: schemas.GuessRequest, db: Session = Depends(get_db), 
 def get_today_progress(db: Session = Depends(get_db), authorization: str = Header(None)):
     user_id = get_current_user_id(authorization)
     return challenge_controller.get_progress(db, user_id)
+
+@router.get("/progress/stats", response_model=schemas.UserStatsResponse)
+def get_user_stats(db: Session = Depends(get_db), authorization: str = Header(None)):
+    user_id = get_current_user_id(authorization)
+    return challenge_controller.get_user_stats(db, user_id)
