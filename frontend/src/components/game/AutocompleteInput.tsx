@@ -28,8 +28,6 @@ export function AutocompleteInput({
     }
   }, [guessing]);
 
-
-
   useEffect(() => {
     if (errorMsg) {
       controls.start({
