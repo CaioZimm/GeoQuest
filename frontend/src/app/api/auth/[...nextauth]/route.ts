@@ -35,7 +35,7 @@ export const authOptions: NextAuthOptions = {
             return user;
           }
           return null;
-        } catch (error) {
+        } catch {
           return null;
         }
       }
@@ -53,7 +53,7 @@ export const authOptions: NextAuthOptions = {
     decode: async ({ secret, token }) => {
       if (!token) return null;
       try {
-        const decodedToken = jwt.verify(token, secret as string) as any;
+        const decodedToken = jwt.verify(token, secret as string) as Record<string, unknown>;
         return decodedToken;
       } catch (error) {
         return null;
@@ -86,19 +86,31 @@ export const authOptions: NextAuthOptions = {
       }
       return true;
     },
-    async jwt({ token, user }) {
+    async jwt({ token, user, trigger, session }) {
       // Initial sign in
       if (user) {
         token.id = user.id;
       }
+
+      // Update session when user updates profile
+      if (trigger === "update" && session?.name) {
+        token.name = session.name;
+      }
+
       return token;
     },
     async session({ session, token }) {
       if (session.user) {
-        (session.user as any).id = token.id;
+        (session.user as Record<string, unknown>).id = token.id;
+        if (token.name) {
+          session.user.name = token.name as string;
+        }
       }
       // Put the token on the session so the frontend can send it to FastAPI
-      (session as any).token = token;
+      const secret = process.env.NEXTAUTH_SECRET || "super-secret-key-123";
+      console.log("[NextAuth] Generating JWT with secret ending in:", secret.slice(-4));
+      const signedToken = jwt.sign(token, secret, { algorithm: "HS256" });
+      (session as unknown as Record<string, unknown>).token = signedToken;
       return session;
     }
   },
