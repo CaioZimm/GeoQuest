@@ -1,60 +1,23 @@
-from app.models.schemas import RegisterRequest, LoginRequest, GoogleLoginRequest
-from passlib.context import CryptContext
-from app.models.models import User
+from app.models.schemas import RegisterRequest, LoginRequest, GoogleLoginRequest, UpdateProfileRequest
+from app.services import auth_service
 from sqlalchemy.orm import Session
-from fastapi import HTTPException
-
-pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
 def register_user(db: Session, req: RegisterRequest):
-    existing_user = db.query(User).filter(User.email == req.email).first()
-    if existing_user:
-        raise HTTPException(status_code=400, detail="Email já cadastrado.")
-
-    hashed_password = pwd_context.hash(req.password)
-    user = User(
-        email=req.email,
-        password_hash=hashed_password,
-        name=req.name,
-        provider="local"
-    )
-    db.add(user)
-    db.commit()
-    db.refresh(user)
+    user = auth_service.register_user(db, req)
 
     return {"message": "Conta criada com sucesso", "user_id": user.id}
 
 def login_user(db: Session, req: LoginRequest):
-    user = db.query(User).filter(User.email == req.email).first()
-    if not user:
-        raise HTTPException(status_code=401, detail="Credenciais inválidas")
-    
-    if user.provider != "local":
-        raise HTTPException(status_code=401, detail="Esta conta usa um login social (Google).")
+    user = auth_service.login_user(db, req)
 
-    if not pwd_context.verify(req.password, user.password_hash):
-        raise HTTPException(status_code=401, detail="Credenciais inválidas")
-
-    return {
-        "id": str(user.id),
-        "email": user.email,
-        "name": user.name
-    }
+    return {"id": str(user.id), "email": user.email, "name": user.name}
 
 def google_sync_user(db: Session, req: GoogleLoginRequest):
-    user = db.query(User).filter(User.email == req.email).first()
-    if not user:
-        user = User(
-            email=req.email,
-            name=req.name,
-            provider="google"
-        )
-        db.add(user)
-        db.commit()
-        db.refresh(user)
-    
-    return {
-        "id": str(user.id),
-        "email": user.email,
-        "name": user.name
-    }
+    user = auth_service.google_sync_user(db, req)
+
+    return {"id": str(user.id), "email": user.email, "name": user.name}
+
+def update_user_profile(db: Session, user_id: int, req: UpdateProfileRequest):
+    user = auth_service.update_user_profile(db, user_id, req)
+
+    return {"id": str(user.id), "email": user.email, "name": user.name}
