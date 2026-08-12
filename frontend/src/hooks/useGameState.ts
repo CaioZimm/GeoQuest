@@ -1,8 +1,8 @@
 import { fetchDailyChallenge, submitGuess, fetchCountries, fetchTodayProgress } from "@/services/gameService";
 import type { DailyChallenge } from "@/models/DailyChallenge";
+import { useState, useEffect, useRef } from "react";
 import type { Country } from "@/models/Country";
 import { useSession } from "next-auth/react";
-import { useState, useEffect } from "react";
 
 export function useGameState() {
   const { data: session, status } = useSession();
@@ -21,6 +21,7 @@ export function useGameState() {
   const [filteredCountries, setFilteredCountries] = useState<string[]>([]);
   const [showAutocomplete, setShowAutocomplete] = useState(false);
   const [playedToday, setPlayedToday] = useState(false);
+  const hasInitialized = useRef(false);
 
   useEffect(() => {
     if (status === "loading") return;
@@ -43,7 +44,7 @@ export function useGameState() {
               if (!token) hasPlayed = true;
             }
           }
-        } catch (e) {}
+        } catch (e) { }
 
         if (token) {
           const progress = await fetchTodayProgress(token);
@@ -69,10 +70,10 @@ export function useGameState() {
           setCountry(savedResult.country);
           setCluesUsedCount(savedResult.cluesUsed);
           if (savedResult.clues) setClues(savedResult.clues);
-          setIsModalOpen(true);
+          if (!hasInitialized.current) setIsModalOpen(true);
         } else if (hasPlayed && !savedResult) {
           setGameState("won");
-          setIsModalOpen(true);
+          if (!hasInitialized.current) setIsModalOpen(true);
         }
 
         const [data, countriesList] = await Promise.all([
@@ -82,12 +83,13 @@ export function useGameState() {
 
         setChallenge(data);
         setAllCountries(countriesList);
-        
+
         if (!hasPlayed || !savedResult?.clues) {
           setClues([data.first_clue]);
         }
-        
+
         setLoading(false);
+        hasInitialized.current = true;
       } catch (err) {
         console.error(err);
         setErrorMsg("Erro ao carregar o desafio.");
