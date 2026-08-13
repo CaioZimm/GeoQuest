@@ -38,6 +38,9 @@ export const metadata: Metadata = {
     title: "GeoQuest | O Desafio Diário de Geografia",
     description: "Teste seus conhecimentos de geografia descobrindo o país do dia no GeoQuest!",
   },
+  verification: {
+    google: "OrZFyP-WejcwqVs6yO7meaDTmVPW4mWYtW7HWJs96CA",
+  },
 };
 
 export default function RootLayout({
