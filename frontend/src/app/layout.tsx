@@ -3,6 +3,7 @@ import "./globals.css";
 import ClientProvider from "@/components/ClientProvider";
 import { Inter } from "next/font/google";
 import type { Metadata } from "next";
+import Script from "next/script";
 
 const inter = Inter({
   variable: "--font-inter",
@@ -39,6 +40,16 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="pt-BR" suppressHydrationWarning>
+      <head>
+        {process.env.NEXT_PUBLIC_ADSENSE_PUBLISHER_ID && (
+          <Script
+            async
+            src={`https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=${process.env.NEXT_PUBLIC_ADSENSE_PUBLISHER_ID}`}
+            crossOrigin="anonymous"
+            strategy="afterInteractive"
+          />
+        )}
+      </head>
       <body className={`${inter.variable} antialiased text-emerald-50 bg-[#0a150f] min-h-screen selection:bg-emerald-500/30`} suppressHydrationWarning>
         <ClientProvider>
           {children}
