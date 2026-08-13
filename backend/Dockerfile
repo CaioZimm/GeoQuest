@@ -4,7 +4,7 @@ WORKDIR /app
 
 COPY requirements.txt .
 
-RUN pip install --no-cache-dir fastapi uvicorn sqlalchemy alembic psycopg2-binary pydantic pydantic-settings python-dotenv
+RUN pip install --no-cache-dir -r requirements.txt
 
 COPY . .
 
