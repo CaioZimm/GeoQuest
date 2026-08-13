@@ -1,5 +1,6 @@
 import "./globals.css";
 
+import { GoogleAnalytics } from "@next/third-parties/google";
 import ClientProvider from "@/components/ClientProvider";
 import { Inter } from "next/font/google";
 import type { Metadata } from "next";
@@ -12,7 +13,13 @@ const inter = Inter({
 
 export const metadata: Metadata = {
   title: "GeoQuest | O Desafio Diário de Geografia",
-  description: "Descubra o país misterioso do dia usando o menor número possível de pistas. Teste seus conhecimentos geográficos!",
+  description: "Descubra o país misterioso do dia usando o menor número possível de pistas. Teste seus conhecimentos geográficos no GeoQuest!",
+  keywords: ["geografia", "jogo de geografia", "países", "wordle de geografia", "desafio diário", "GeoQuest", "aprender geografia"],
+  authors: [{ name: "Caio Claudino Venancio" }],
+  metadataBase: new URL("https://geoquestt.vercel.app"),
+  alternates: {
+    canonical: '/',
+  },
   icons: {
     icon: "/icon.png",
     shortcut: "/icon.png",
@@ -21,7 +28,7 @@ export const metadata: Metadata = {
   openGraph: {
     title: "GeoQuest | O Desafio Diário de Geografia",
     description: "Descubra o país misterioso do dia usando o menor número possível de pistas. Jogue agora!",
-    url: "#",
+    url: "https://geoquestt.vercel.app",
     siteName: "GeoQuest",
     locale: "pt_BR",
     type: "website",
@@ -29,7 +36,7 @@ export const metadata: Metadata = {
   twitter: {
     card: "summary_large_image",
     title: "GeoQuest | O Desafio Diário de Geografia",
-    description: "Teste seus conhecimentos de geografia descobrindo o país do dia!",
+    description: "Teste seus conhecimentos de geografia descobrindo o país do dia no GeoQuest!",
   },
 };
 
@@ -54,6 +61,7 @@ export default function RootLayout({
         <ClientProvider>
           {children}
         </ClientProvider>
+        <GoogleAnalytics gaId="G-XGPN32J6MR" />
       </body>
     </html>
   );
