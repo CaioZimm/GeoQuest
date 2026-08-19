@@ -51,6 +51,17 @@ export default function RootLayout({
   return (
     <html lang="pt-BR" suppressHydrationWarning>
       <head>
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify({
+              "@context": "https://schema.org",
+              "@type": "WebSite",
+              name: "GeoQuest",
+              url: "https://geoquestt.vercel.app/",
+            }),
+          }}
+        />
         {process.env.NEXT_PUBLIC_ADSENSE_PUBLISHER_ID && (
           <Script
             async
