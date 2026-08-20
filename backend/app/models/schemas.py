@@ -47,9 +47,33 @@ class UpdateProfileRequest(BaseModel):
     name: str
     password: Optional[str] = None
 
+class Achievement(BaseModel):
+    id: str
+    name: str
+    description: str
+    icon: str
+    count: int
+    achieved: bool
+    tier: str
+    next_goal: int
+
 class UserStatsResponse(BaseModel):
     played: int
     win_rate: int
     current_streak: int
     max_streak: int
     avg_guesses: float
+    achievements: list[Achievement] = []
+    
+class LeaderboardEntry(BaseModel):
+    rank: int
+    user_name: str
+    total_score: int
+    total_wins: int
+    max_streak: int
+
+class LeaderboardResponse(BaseModel):
+    by_score: list[LeaderboardEntry]
+    by_streak: list[LeaderboardEntry]
+    user_score_entry: Optional[LeaderboardEntry] = None
+    user_streak_entry: Optional[LeaderboardEntry] = None
