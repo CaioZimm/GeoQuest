@@ -1,8 +1,8 @@
 import { GameResultProps } from "@/models/interfaces/GameResultProps";
+import { X, Share2, Check } from "lucide-react";
 import { useEffect, useState } from "react";
 import confetti from "canvas-confetti";
 import { motion } from "framer-motion";
-import { X } from "lucide-react";
 import { clsx } from "clsx";
 
 export function GameResult({ gameState, country, cluesUsed, totalClues, onClose }: GameResultProps) {
@@ -61,6 +61,37 @@ export function GameResult({ gameState, country, cluesUsed, totalClues, onClose 
   const maxPoints = 1000;
   const deductionPerClue = Math.floor(maxPoints / totalClues);
   const earnedPoints = gameState === "won" ? Math.max(100, maxPoints - ((cluesUsed - 1) * deductionPerClue)) : 0;
+
+  const [copied, setCopied] = useState(false);
+
+  const generateShareText = () => {
+    let squares = "";
+    if (gameState === "won") {
+      for (let i = 1; i <= totalClues; i++) {
+        if (i < cluesUsed) squares += "🟥";
+        else if (i === cluesUsed) squares += "🟩";
+        else squares += "⬜";
+      }
+    } else {
+      for (let i = 0; i < totalClues; i++) squares += "🟥";
+    }
+
+    const title = gameState === "won"
+      ? `🌍 GeoQuest\nAcertou em ${cluesUsed}/${totalClues} tentativas!`
+      : `🌍 GeoQuest\nNão foi dessa vez! (X/${totalClues})`;
+
+    return `${title}\n${squares}\nJogue também: https://geoquestt.vercel.app`;
+  };
+
+  const handleShare = async () => {
+    try {
+      await navigator.clipboard.writeText(generateShareText());
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch (err) {
+      console.error("Failed to copy", err);
+    }
+  };
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm">
@@ -131,6 +162,28 @@ export function GameResult({ gameState, country, cluesUsed, totalClues, onClose 
           <p className="text-emerald-300/70 text-xs font-bold uppercase mb-1">Próximo país em</p>
           <p className="text-white text-2xl font-black">{timeUntilNext}</p>
         </div>
+
+        <button
+          onClick={handleShare}
+          className={clsx(
+            "mt-4 w-full py-3 rounded-lg font-bold flex items-center justify-center gap-2 transition-all cursor-pointer",
+            copied
+              ? "bg-emerald-600 text-white"
+              : "bg-emerald-500 hover:bg-emerald-400 text-[#0a150f]"
+          )}
+        >
+          {copied ? (
+            <>
+              <Check className="w-5 h-5" />
+              Copiado!
+            </>
+          ) : (
+            <>
+              <Share2 className="w-5 h-5" />
+              Compartilhar Resultado
+            </>
+          )}
+        </button>
       </motion.div>
     </div>
   );
