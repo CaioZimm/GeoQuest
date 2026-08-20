@@ -86,6 +86,9 @@ Em um novo terminal, instale as dependências do client e inicie o servidor:
 ```bash
 cd frontend
 
+# Crie o arquivo de configuração de variáveis de ambiente
+cp .env.example .env.local
+
 # Instale as dependências do Node
 npm install
 

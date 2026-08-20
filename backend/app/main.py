@@ -4,6 +4,8 @@ import socket
 import os
 
 from app.routes.challenge_routes import router as challenge_router
+from app.routes.admin_routes import router as admin_router
+from app.routes.auth_routes import router as auth_router
 from app.database.connection import engine
 from app.models import models
 models.Base.metadata.create_all(bind=engine)
@@ -43,7 +45,6 @@ app.add_middleware(
 def check_api():
     return {"status": "ok", "message": "GeoQuest API is running!"}
 
-from app.routes.auth_routes import router as auth_router
-
+app.include_router(admin_router, prefix="/api/admin")
 app.include_router(challenge_router, prefix="/api")
 app.include_router(auth_router, prefix="/api/auth")
