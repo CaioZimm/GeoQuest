@@ -130,6 +130,59 @@ export function StatisticsModal({ isOpen, onClose }: StatisticsModalProps) {
                       <span className="text-xs uppercase text-emerald-400/60 font-bold mt-1">Maior Sequência</span>
                     </div>
                   </div>
+
+                  {stats.achievements && stats.achievements.length > 0 && (
+                    <>
+                      <div className="w-full h-px bg-emerald-900/40"></div>
+                      <div>
+                        <h4 className="text-white font-bold text-sm mb-4 text-center uppercase tracking-wider text-emerald-400/80">Conquistas e Medalhas</h4>
+                        <div className="flex justify-center gap-4 flex-wrap">
+                          {stats.achievements.map((ach) => {
+                            const getTierStyle = () => {
+                              if (!ach.achieved) return 'bg-[#08120c] border-emerald-900/30 opacity-50 grayscale text-emerald-500/50';
+                              switch (ach.tier) {
+                                case 'bronze': return 'bg-amber-900/20 border-[#cd7f32] shadow-[0_0_15px_rgba(205,127,50,0.2)] text-[#cd7f32]';
+                                case 'silver': return 'bg-slate-800/40 border-[#c0c0c0] shadow-[0_0_15px_rgba(192,192,192,0.2)] text-[#c0c0c0]';
+                                case 'gold': return 'bg-yellow-900/20 border-[#ffd700] shadow-[0_0_15px_rgba(255,215,0,0.3)] text-[#ffd700]';
+                                case 'platinum': return 'bg-cyan-900/20 border-[#00ffff] shadow-[0_0_20px_rgba(0,255,255,0.4)] ring-1 ring-[#00ffff]/50 text-[#e5e4e2]';
+                                case 'emerald': return 'bg-emerald-900/20 border-[#50c878] shadow-[0_0_25px_rgba(80,200,120,0.6)] ring-2 ring-[#50c878]/70 text-[#50c878]';
+                                default: return 'bg-emerald-900/30 border-emerald-500/50 shadow-[0_0_15px_rgba(16,185,129,0.2)] text-emerald-400';
+                              }
+                            };
+
+                            const getTierBadgeStyle = () => {
+                              switch (ach.tier) {
+                                case 'bronze': return 'border-[#cd7f32] text-[#cd7f32] bg-[#cd7f32]/10';
+                                case 'silver': return 'border-[#c0c0c0] text-[#c0c0c0] bg-[#c0c0c0]/10';
+                                case 'gold': return 'border-[#ffd700] text-[#ffd700] bg-[#ffd700]/10';
+                                case 'platinum': return 'border-[#00ffff] text-[#00ffff] bg-[#00ffff]/10 shadow-[0_0_10px_rgba(0,255,255,0.5)]';
+                                case 'emerald': return 'border-[#50c878] text-[#50c878] bg-[#50c878]/10 shadow-[0_0_15px_rgba(80,200,120,0.6)]';
+                                default: return 'border-emerald-500 text-emerald-400 bg-emerald-500/10';
+                              }
+                            };
+
+                            const tierNames: Record<string, string> = { bronze: 'BRONZE', silver: 'PRATA', gold: 'OURO', platinum: 'PLATINA', emerald: 'ESMERALDA' };
+
+                            return (
+                              <div
+                                key={ach.id}
+                                className={`relative flex flex-col items-center p-3 rounded-xl border transition-all ${getTierStyle()}`}
+                                title={ach.description}
+                              >
+                                <div className="text-4xl mb-2">{ach.icon}</div>
+                                <span className="text-[10px] font-bold uppercase text-center w-20 leading-tight">{ach.name}</span>
+                                {ach.achieved && ach.tier && ach.tier !== 'none' && (
+                                  <div className={`absolute -top-2 left-1/2 -translate-x-1/2 backdrop-blur text-[8px] font-black px-2 py-0.5 rounded-full border uppercase tracking-wider ${getTierBadgeStyle()}`}>
+                                    {tierNames[ach.tier] || ach.tier}
+                                  </div>
+                                )}
+                              </div>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    </>
+                  )}
                 </div>
               ) : (
                 <div className="flex justify-center py-10">

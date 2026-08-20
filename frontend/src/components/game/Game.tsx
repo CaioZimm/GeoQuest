@@ -4,10 +4,11 @@ import { StatisticsModal } from "../modals/StatisticsModal";
 import { AutocompleteInput } from "./AutocompleteInput";
 import { useSession, signOut } from "next-auth/react";
 import { ProfileModal } from "../modals/ProfileModal";
+import { RankingModal } from "../modals/RankingModal";
 import { useState, useRef, useEffect } from "react";
+import { User, LogOut, Trophy } from "lucide-react";
 import { useGameState } from "@/hooks/useGameState";
 import { AuthModal } from "../modals/AuthModal";
-import { User, LogOut } from "lucide-react";
 import { GameResult } from "./GameResult";
 import { ClueList } from "./ClueList";
 
@@ -36,6 +37,7 @@ export default function Game() {
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
   const [isStatsModalOpen, setIsStatsModalOpen] = useState(false);
   const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
+  const [isRankingModalOpen, setIsRankingModalOpen] = useState(false);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
 
   const dropdownRef = useRef<HTMLDivElement>(null);
@@ -100,12 +102,29 @@ export default function Game() {
         <h1 className="text-3xl font-bold tracking-wider uppercase text-white text-center flex-1">
           GEOQUEST
         </h1>
-        
+
+        <div className="w-12 flex justify-end">
+          <button
+            onClick={() => setIsRankingModalOpen(true)}
+            className="text-amber-500 hover:text-amber-300 transition-colors cursor-pointer bg-emerald-950/50 p-2 rounded-xl border border-emerald-900/50 shadow-sm"
+            title="Rankings"
+          >
+            <Trophy className="w-6 h-6" />
+          </button>
+        </div>
       </header>
 
       <AuthModal isOpen={isAuthModalOpen} onClose={() => setIsAuthModalOpen(false)} />
       <StatisticsModal isOpen={isStatsModalOpen} onClose={() => setIsStatsModalOpen(false)} />
       <ProfileModal isOpen={isProfileModalOpen} onClose={() => setIsProfileModalOpen(false)} />
+      <RankingModal
+        isOpen={isRankingModalOpen}
+        onClose={() => setIsRankingModalOpen(false)}
+        onLoginRequest={() => {
+          setIsRankingModalOpen(false);
+          setIsAuthModalOpen(true);
+        }}
+      />
 
       {/* Input Area */}
       {gameState === "playing" && (

@@ -1,7 +1,6 @@
+import { AutocompleteInputProps } from "@/models/interfaces/AutocompleteInputProps";
 import { motion, useAnimation } from "framer-motion";
 import { useEffect, useState, useRef } from "react";
-
-import { AutocompleteInputProps } from "@/models/interfaces/AutocompleteInputProps";
 import { Search, Globe2 } from "lucide-react";
 
 export function AutocompleteInput({

@@ -3,7 +3,7 @@ import { signIn } from "next-auth/react";
 import { useState } from "react";
 
 export function useAuth(onClose: () => void) {
-  const [isLoginMode, setIsLoginMode] = useState(false);
+  const [isLoginMode, setIsLoginMode] = useState(true);
   const [isEmailView, setIsEmailView] = useState(false);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");

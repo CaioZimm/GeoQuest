@@ -46,7 +46,6 @@ export const authOptions: NextAuthOptions = {
   },
   jwt: {
     encode: ({ secret, token }) => {
-      // Create a standard HS256 JWT token so Python can decode it easily
       const encodedToken = jwt.sign(token!, secret as string, { algorithm: "HS256" });
       return encodedToken;
     },
@@ -76,7 +75,7 @@ export const authOptions: NextAuthOptions = {
 
           const dbUser = await res.json();
           if (res.ok && dbUser) {
-            user.id = dbUser.id; // Assign the DB ID to the user object
+            user.id = dbUser.id;
             return true;
           }
           return false;

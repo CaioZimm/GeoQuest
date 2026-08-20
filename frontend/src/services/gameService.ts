@@ -43,7 +43,7 @@ export const fetchTodayProgress = async (token: string | null = null) => {
   if (token) {
     headers["Authorization"] = `Bearer ${token}`;
   }
-  
+
   const res = await fetch(`${API_URL}/api/progress/today`, { headers });
   if (!res.ok) {
     return { played_today: false };
@@ -60,7 +60,7 @@ export const fetchUserStats = async (token: string) => {
   const res = await fetch(`${API_URL}/api/progress/stats`, {
     headers: headers
   });
-  
+
   if (!res.ok) {
     throw new Error("Erro ao buscar estatísticas");
   }
@@ -69,7 +69,7 @@ export const fetchUserStats = async (token: string) => {
 
 export const updateProfile = async (name: string, password?: string, token?: string) => {
   if (!token) throw new Error("Não autorizado");
-  
+
   const headers: Record<string, string> = {
     "Content-Type": "application/json",
     "Authorization": `Bearer ${token}`
@@ -89,6 +89,24 @@ export const updateProfile = async (name: string, password?: string, token?: str
   if (!res.ok) {
     const errorData = await res.json().catch(() => ({}));
     throw new Error(errorData.detail || "Erro ao atualizar perfil");
+  }
+
+  return res.json();
+};
+
+export const fetchLeaderboard = async (token?: string) => {
+  const headers: Record<string, string> = {};
+  if (token) {
+    headers["Authorization"] = `Bearer ${token}`;
+  }
+
+  const res = await fetch(`${API_URL}/api/progress/leaderboard`, {
+    headers: headers,
+    next: { revalidate: 60 }
+  });
+
+  if (!res.ok) {
+    throw new Error("Erro ao buscar leaderboard");
   }
 
   return res.json();
