@@ -16,3 +16,6 @@ def get_progress(db: Session, user_id: str):
 
 def get_user_stats(db: Session, user_id: str):
     return challenge_service.get_user_stats(db, user_id)
+
+def get_leaderboard(db: Session, user_id: str = None):
+    return challenge_service.get_leaderboard(db, user_id)

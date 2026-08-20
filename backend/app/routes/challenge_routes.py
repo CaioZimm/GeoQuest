@@ -33,3 +33,13 @@ def get_today_progress(db: Session = Depends(get_db), authorization: str = Heade
 def get_user_stats(db: Session = Depends(get_db), authorization: str = Header(None)):
     user_id = get_current_user_id(authorization)
     return challenge_controller.get_user_stats(db, user_id)
+
+@router.get("/progress/leaderboard", response_model=schemas.LeaderboardResponse)
+def get_leaderboard(db: Session = Depends(get_db), authorization: str = Header(None)):
+    user_id = None
+    if authorization:
+        try:
+            user_id = get_current_user_id(authorization)
+        except Exception:
+            pass
+    return challenge_controller.get_leaderboard(db, user_id)

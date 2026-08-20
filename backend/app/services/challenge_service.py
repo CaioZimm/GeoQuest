@@ -1,8 +1,11 @@
+from app.models.models import User, DailyProgress
+from datetime import timedelta, datetime
 from app.models import models, schemas
 from sqlalchemy.orm import Session
 from fastapi import HTTPException
-from datetime import timedelta, datetime
+from datetime import timedelta
 from zoneinfo import ZoneInfo
+from sqlalchemy import func
 import unicodedata
 import hashlib
 
@@ -25,8 +28,15 @@ def get_challenge_country(db: Session, seed: str = None):
     challenge = db.query(models.DailyChallenge).filter(models.DailyChallenge.date == today).first()
     
     if not challenge:
-        day_of_year = today.timetuple().tm_yday
-        chosen_country = countries[day_of_year % len(countries)]
+        import random
+        r = random.Random(42)
+        shuffled_countries = countries.copy()
+        r.shuffle(shuffled_countries)
+        
+        epoch = datetime(2024, 1, 1).date()
+        days_since_epoch = (today - epoch).days
+        
+        chosen_country = shuffled_countries[days_since_epoch % len(shuffled_countries)]
         
         challenge = models.DailyChallenge(country_id=chosen_country.id, date=today)
         db.add(challenge)
@@ -176,6 +186,7 @@ def get_user_stats(db: Session, user_id: str):
     ordered_records = sorted(records, key=lambda x: x.date)
     temp_streak = 0
     max_streak = 0
+    streak_7_count = 0
     prev_date = None
     
     for r in ordered_records:
@@ -185,6 +196,9 @@ def get_user_stats(db: Session, user_id: str):
             elif r.date > prev_date + timedelta(days=1):
                 temp_streak = 1
             
+            if temp_streak % 7 == 0 and temp_streak > 0:
+                streak_7_count += 1
+                
             if temp_streak > max_streak:
                 max_streak = temp_streak
         else:
@@ -208,11 +222,186 @@ def get_user_stats(db: Session, user_id: str):
                     prev_date_desc = r.date
                 else:
                     break
+
+    one_shot_count = sum(1 for r in wins if r.clues_used == 1)
+    
+    from app.models.models import DailyChallenge, Country
+    won_dates = [r.date for r in wins]
+    challenges = db.query(DailyChallenge).filter(DailyChallenge.date.in_(won_dates)).all()
+    won_country_ids = [c.country_id for c in challenges]
+    
+    won_continents = db.query(Country.continent).filter(Country.id.in_(won_country_ids)).distinct().all()
+    won_continents_set = {c[0] for c in won_continents if c[0]}
+    
+    all_continents = db.query(Country.continent).distinct().all()
+    all_continents_set = {c[0] for c in all_continents if c[0]}
+    total_conts = len(all_continents_set) if all_continents_set else 6
+    
+    def get_tier(count: int, thresholds: list) -> tuple[str, int]:
+        tiers = ['none', 'bronze', 'silver', 'gold', 'platinum', 'emerald']
+        current_tier_idx = 0
+        next_goal = thresholds[0]
+        for i, t in enumerate(thresholds):
+            if count >= t:
+                current_tier_idx = i + 1
+                if i + 1 < len(thresholds):
+                    next_goal = thresholds[i+1]
+                else:
+                    next_goal = t
+        return tiers[current_tier_idx], next_goal
+
+    # Tiro Certeiro (1, 5, 10, 20, 50)
+    tc_tier, tc_next = get_tier(one_shot_count, [1, 5, 10, 20, 50])
+    tc_desc = "Você é uma lenda dos Tiros Certeiros!" if tc_tier == 'emerald' else f"Acertou de primeira. Faltam {tc_next - one_shot_count} para o nível {['Prata', 'Ouro', 'Platina', 'Esmeralda', 'Máximo'][['bronze', 'silver', 'gold', 'platinum', 'emerald'].index(tc_tier) if tc_tier != 'none' else 0]}!"
+
+    # Imparável (7, 14, 30, 60, 90 days)
+    imp_tier, imp_next = get_tier(max_streak, [7, 14, 30, 60, 90])
+    imp_desc = "Uma divindade imparável!" if imp_tier == 'emerald' else f"Dias seguidos jogando. Faltam {imp_next - max_streak} dias para o próximo nível!"
+
+    # Mochileiro (2, 3, 4, 5, total)
+    distinct_conts = len(won_continents_set)
+    moch_tier, moch_next = get_tier(distinct_conts, [2, 3, 4, 5, total_conts])
+    moch_desc = "Explorou todos os continentes do mundo!" if moch_tier == 'emerald' else f"Acertou países em {distinct_conts} continentes. Faltam {moch_next - distinct_conts} continentes para evoluir o nível!"
+    
+    achievements = [
+        schemas.Achievement(
+            id="one_shot",
+            name="Tiro Certeiro",
+            description=tc_desc,
+            icon="🎯",
+            count=one_shot_count,
+            achieved=one_shot_count > 0,
+            tier=tc_tier,
+            next_goal=tc_next
+        ),
+        schemas.Achievement(
+            id="streak_7",
+            name="Imparável",
+            description=imp_desc,
+            icon="🔥",
+            count=max_streak,
+            achieved=max_streak >= 7,
+            tier=imp_tier,
+            next_goal=imp_next
+        ),
+        schemas.Achievement(
+            id="backpacker",
+            name="Mochileiro",
+            description=moch_desc,
+            icon="🎒",
+            count=distinct_conts,
+            achieved=distinct_conts >= 2,
+            tier=moch_tier,
+            next_goal=moch_next
+        )
+    ]
                     
     return schemas.UserStatsResponse(
         played=played,
         win_rate=win_rate,
         current_streak=temp_streak,
         max_streak=max_streak,
-        avg_guesses=avg_guesses
+        avg_guesses=avg_guesses,
+        achievements=achievements
+    )
+
+def get_leaderboard(db: Session, user_id: str = None):
+    users = db.query(User).all()
+    progress_records = db.query(DailyProgress).order_by(DailyProgress.date.asc()).all()
+    
+    user_progress = {u.id: [] for u in users}
+    for p in progress_records:
+        if p.user_id in user_progress:
+            user_progress[p.user_id].append(p)
+            
+    stats_list = []
+    
+    for user in users:
+        records = user_progress.get(user.id, [])
+        
+        total_score = 0
+        total_wins = 0
+        
+        temp_streak = 0
+        max_streak = 0
+        prev_date = None
+        
+        for r in records:
+            if r.won:
+                total_wins += 1
+                total_score += max(0, 1000 - (r.clues_used - 1) * 166)
+                
+                if prev_date is None:
+                    temp_streak = 1
+                elif r.date == prev_date + timedelta(days=1):
+                    temp_streak += 1
+                elif r.date > prev_date + timedelta(days=1):
+                    temp_streak = 1
+                    
+                if temp_streak > max_streak:
+                    max_streak = temp_streak
+                    
+                prev_date = r.date
+            else:
+                temp_streak = 0
+                prev_date = r.date
+                
+        if total_wins > 0:
+            name = user.name or "Anônimo"
+            stats_list.append({
+                "user_id": user.id,
+                "user_name": name,
+                "total_score": total_score,
+                "total_wins": total_wins,
+                "max_streak": max_streak
+            })
+            
+    by_score = sorted(stats_list, key=lambda x: x["total_score"], reverse=True)
+    by_streak = sorted(stats_list, key=lambda x: x["max_streak"], reverse=True)
+    
+    user_score_entry = None
+    user_streak_entry = None
+    
+    if user_id:
+        # Find user in score list
+        for idx, item in enumerate(by_score):
+            if item["user_id"] == user_id:
+                user_score_entry = schemas.LeaderboardEntry(
+                    rank=idx + 1,
+                    user_name=item["user_name"],
+                    total_score=item["total_score"],
+                    total_wins=item["total_wins"],
+                    max_streak=item["max_streak"]
+                )
+                break
+                
+        # Find user in streak list
+        for idx, item in enumerate(by_streak):
+            if item["user_id"] == user_id:
+                user_streak_entry = schemas.LeaderboardEntry(
+                    rank=idx + 1,
+                    user_name=item["user_name"],
+                    total_score=item["total_score"],
+                    total_wins=item["total_wins"],
+                    max_streak=item["max_streak"]
+                )
+                break
+    
+    def to_entries(lst):
+        entries = []
+        for idx, item in enumerate(lst):
+            entries.append(schemas.LeaderboardEntry(
+                rank=idx + 1,
+                user_name=item["user_name"],
+                total_score=item["total_score"],
+                total_wins=item["total_wins"],
+                max_streak=item["max_streak"]
+            ))
+        return entries
+        
+    return schemas.LeaderboardResponse(
+        by_score=to_entries(by_score[:20]),
+        by_streak=to_entries(by_streak[:20]),
+        user_score_entry=user_score_entry,
+        user_streak_entry=user_streak_entry
     )
