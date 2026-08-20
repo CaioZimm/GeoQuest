@@ -41,6 +41,16 @@ export const metadata: Metadata = {
   verification: {
     google: "OrZFyP-WejcwqVs6yO7meaDTmVPW4mWYtW7HWJs96CA",
   },
+  manifest: "/manifest.json",
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "default",
+    title: "GeoQuest",
+  },
+};
+
+export const viewport = {
+  themeColor: "#0a150f",
 };
 
 export default function RootLayout({

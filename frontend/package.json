@@ -9,6 +9,7 @@
     "lint": "eslint"
   },
   "dependencies": {
+    "@ducanh2912/next-pwa": "^10.2.9",
     "@next/third-parties": "^16.3.0",
     "@types/canvas-confetti": "^1.9.0",
     "@types/jsonwebtoken": "^9.0.10",
@@ -21,6 +22,7 @@
     "next-auth": "^4.24.15",
     "react": "19.2.8",
     "react-dom": "19.2.8",
+    "react-hot-toast": "^2.6.0",
     "tailwind-merge": "^3.6.0"
   },
   "devDependencies": {
