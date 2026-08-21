@@ -8,6 +8,9 @@ def get_daily_challenge_data(db: Session, seed: str = None):
 def list_all_countries(db: Session):
     return challenge_service.list_all_countries(db)
 
+def get_extra_hint(db: Session, seed: str = None):
+    return challenge_service.get_extra_hint(db, seed)
+
 def process_guess(db: Session, request: schemas.GuessRequest, user_id: str = None):
     return challenge_service.process_guess(db, request, user_id)
 

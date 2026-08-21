@@ -14,6 +14,10 @@ router = APIRouter()
 def get_daily_challenge(seed: str = None, db: Session = Depends(get_db)):
     return challenge_controller.get_daily_challenge_data(db, seed)
 
+@router.get("/daily-challenge/extra-hint")
+def get_extra_hint(seed: str = None, db: Session = Depends(get_db)):
+    return challenge_controller.get_extra_hint(db, seed)
+
 @router.get("/countries", response_model=list[str])
 def get_all_countries(db: Session = Depends(get_db)):
     """Return a list of all country names for the frontend autocomplete."""
