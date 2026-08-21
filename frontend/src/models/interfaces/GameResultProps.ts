@@ -5,5 +5,7 @@ export interface GameResultProps {
     country: Country;
     cluesUsed: number;
     totalClues: number;
+    gameMode?: "daily" | "infinite";
+    onPlayAgain?: () => void;
     onClose: () => void;
 }

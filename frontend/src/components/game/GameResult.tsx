@@ -5,7 +5,7 @@ import confetti from "canvas-confetti";
 import { motion } from "framer-motion";
 import { clsx } from "clsx";
 
-export function GameResult({ gameState, country, cluesUsed, totalClues, onClose }: GameResultProps) {
+export function GameResult({ gameState, country, cluesUsed, totalClues, gameMode, onPlayAgain, onClose }: GameResultProps) {
 
   const [timeUntilNext, setTimeUntilNext] = useState<string>("");
 
@@ -158,11 +158,19 @@ export function GameResult({ gameState, country, cluesUsed, totalClues, onClose 
           </div>
         </div>
 
-        <div className="w-full bg-[#06180e] border border-emerald-900/60 rounded-lg p-4 mt-2">
-          <p className="text-emerald-300/70 text-xs font-bold uppercase mb-1">Próximo país em</p>
-          <p className="text-white text-2xl font-black">{timeUntilNext}</p>
-        </div>
-
+        {gameMode !== "infinite" ? (
+          <div className="w-full bg-[#06180e] border border-emerald-900/60 rounded-lg p-4 mt-2">
+            <p className="text-emerald-300/70 text-xs font-bold uppercase mb-1">Próximo país em</p>
+            <p className="text-white text-2xl font-black">{timeUntilNext}</p>
+          </div>
+        ) : (
+          <button
+            onClick={onPlayAgain}
+            className="w-full bg-amber-600 hover:bg-amber-500 border border-amber-500/50 rounded-lg p-4 mt-2 transition-colors cursor-pointer text-white font-black uppercase text-xl shadow-lg shadow-amber-900/20"
+          >
+            Jogar Novamente
+          </button>
+        )}
         <button
           onClick={handleShare}
           className={clsx(

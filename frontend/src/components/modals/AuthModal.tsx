@@ -1,9 +1,9 @@
 "use client";
 
-import { X, Mail, BarChart3, Smartphone, Eye, EyeOff } from "lucide-react";
-import { signIn } from "next-auth/react";
-import { useAuth } from "@/hooks/useAuth";
+import { X, Mail, BarChart3, Smartphone, Eye, EyeOff, Repeat } from "lucide-react";
 import { FeatureItem } from "./FeatureItem";
+import { useAuth } from "@/hooks/useAuth";
+import { signIn } from "next-auth/react";
 
 export function AuthModal({ isOpen, onClose }: { isOpen: boolean; onClose: () => void }) {
   const {
@@ -50,6 +50,11 @@ export function AuthModal({ isOpen, onClose }: { isOpen: boolean; onClose: () =>
                 icon={Smartphone}
                 title="Jogue em Qualquer Lugar"
                 desc="Sincronize entre celular, tablet e computador"
+              />
+              <FeatureItem
+                icon={Repeat}
+                title="Modo Infinito"
+                desc="Jogue quantas vezes quiser sem limites"
               />
             </div>
 

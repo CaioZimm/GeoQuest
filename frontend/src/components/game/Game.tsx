@@ -8,13 +8,18 @@ import { RankingModal } from "../modals/RankingModal";
 import { useState, useRef, useEffect } from "react";
 import { User, LogOut, Trophy } from "lucide-react";
 import { useGameState } from "@/hooks/useGameState";
+import { AdExtraHint } from "../modals/AdExtraHint";
 import { AuthModal } from "../modals/AuthModal";
 import { GameResult } from "./GameResult";
 import { ClueList } from "./ClueList";
+import { clsx } from "clsx";
 
 export default function Game() {
   const {
     loading,
+    gameMode,
+    startInfiniteMode,
+    startDailyMode,
     challenge,
     clues,
     cluesUsedCount,
@@ -27,10 +32,13 @@ export default function Game() {
     setIsModalOpen,
     filteredCountries,
     showAutocomplete,
+    extraHint,
+    isWatchingAd,
     setShowAutocomplete,
     handleInputChange,
     handleSelectCountry,
-    handleGuess
+    handleGuess,
+    requestExtraHint
   } = useGameState();
 
   const { data: session } = useSession();
@@ -89,6 +97,15 @@ export default function Game() {
                 Estatísticas
               </button>
               <button
+                onClick={() => {
+                  gameMode === "daily" ? startInfiniteMode() : startDailyMode();
+                  setIsDropdownOpen(false);
+                }}
+                className="text-left px-4 py-3 text-amber-400 hover:bg-amber-900/20 hover:text-amber-300 transition-colors cursor-pointer text-sm font-bold border-b border-emerald-900/40"
+              >
+                {gameMode === "daily" ? "Modo Infinito" : "Desafio Diário"}
+              </button>
+              <button
                 onClick={() => { signOut(); setIsDropdownOpen(false); }}
                 className="text-left px-4 py-3 text-red-400 hover:bg-red-950/50 hover:text-red-300 transition-colors cursor-pointer text-sm font-bold flex items-center justify-between"
               >
@@ -99,18 +116,27 @@ export default function Game() {
           )}
         </div>
 
-        <h1 className="text-3xl font-bold tracking-wider uppercase text-white text-center flex-1">
-          GEOQUEST
-        </h1>
+        <div className="flex-1 flex flex-col items-center">
+          <h1 className="text-3xl font-bold tracking-wider uppercase text-white text-center">
+            GEOQUEST
+          </h1>
+          {gameMode === "infinite" && (
+            <span className="text-xs font-bold text-amber-500 uppercase tracking-widest mt-1">
+              Modo Ilimitado
+            </span>
+          )}
+        </div>
 
         <div className="w-12 flex justify-end">
-          <button
-            onClick={() => setIsRankingModalOpen(true)}
-            className="text-amber-500 hover:text-amber-300 transition-colors cursor-pointer bg-emerald-950/50 p-2 rounded-xl border border-emerald-900/50 shadow-sm"
-            title="Rankings"
-          >
-            <Trophy className="w-6 h-6" />
-          </button>
+          {gameMode === "daily" && (
+            <button
+              onClick={() => setIsRankingModalOpen(true)}
+              className="text-amber-500 hover:text-amber-300 transition-colors cursor-pointer bg-emerald-950/50 p-2 rounded-xl border border-emerald-900/50 shadow-sm"
+              title="Rankings"
+            >
+              <Trophy className="w-6 h-6" />
+            </button>
+          )}
         </div>
       </header>
 
@@ -143,7 +169,14 @@ export default function Game() {
         />
       )}
 
-      {/* Floating Reopen Button if modal was closed */}
+      <AdExtraHint
+        gameState={gameState}
+        cluesLength={clues.length}
+        extraHint={extraHint}
+        isWatchingAd={isWatchingAd}
+        requestExtraHint={requestExtraHint}
+      />
+
       {gameState !== "playing" && !isModalOpen && (
         <div className="mb-6 flex flex-col gap-2">
           <button
@@ -162,11 +195,12 @@ export default function Game() {
           country={country}
           cluesUsed={cluesUsedCount}
           totalClues={totalClues}
+          gameMode={gameMode}
+          onPlayAgain={startInfiniteMode}
           onClose={() => setIsModalOpen(false)}
         />
       )}
 
-      {/* Clues List */}
       <ClueList clues={clues} totalClues={totalClues} />
 
       <footer className="mt-12 text-center text-xs text-emerald-300/50 pb-8 border-t border-emerald-900/40 pt-4">
