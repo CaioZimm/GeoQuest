@@ -57,3 +57,11 @@ class DailyProgress(Base):
     clues_used = Column(Integer, nullable=False)
 
     user = relationship("User", back_populates="progress")
+
+class InfiniteClueCache(Base):
+    __tablename__ = "infinite_clue_cache"
+
+    id = Column(Integer, primary_key=True, index=True)
+    seed = Column(String, unique=True, index=True, nullable=False)
+    country_name = Column(String, nullable=False)
+    clues_json = Column(String, nullable=False)

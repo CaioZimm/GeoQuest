@@ -12,7 +12,7 @@ def verify_admin(authorization: str = Header(None)):
         raise HTTPException(status_code=401, detail="Não autorizado")
     user_id = get_current_user_id(authorization)
     
-    if str(user_id) not in ("0", "1"):
+    if str(user_id) not in ("0"):
         raise HTTPException(status_code=403, detail="Acesso restrito ao administrador")
     return user_id
 

@@ -48,20 +48,58 @@ def get_challenge_country(db: Session, seed: str = None):
 def get_daily_challenge_data(db: Session, seed: str = None):
     country = get_challenge_country(db, seed)
     
-    clues = db.query(models.Clue).filter(models.Clue.country_id == country.id).order_by(models.Clue.order).all()
+    first_clue_text = ""
+    total_clues_count = 6
     
-    if not clues:
-        raise HTTPException(status_code=500, detail="País do desafio não possui pistas cadastradas.")
+    if seed:
+        from app.models.models import InfiniteClueCache
+        import json
+        from app.services.llm_service import generate_clues_for_country
+        
+        cached = db.query(InfiniteClueCache).filter(InfiniteClueCache.seed == seed).first()
+        if cached:
+            clues_list = json.loads(cached.clues_json)
+            first_clue_text = clues_list[0]
+        else:
+            new_clues = generate_clues_for_country(country.name)
+            
+            if "IA Indisponível" in new_clues[0]:
+                static_clues = db.query(models.Clue).filter(models.Clue.country_id == country.id).order_by(models.Clue.order).all()
+                if static_clues:
+                    new_clues = [c.text for c in static_clues]
+            
+            first_clue_text = new_clues[0]
+            
+            new_cache = InfiniteClueCache(
+                seed=seed,
+                country_name=country.name,
+                clues_json=json.dumps(new_clues)
+            )
+            db.add(new_cache)
+            db.commit()
+    else:
+        clues = db.query(models.Clue).filter(models.Clue.country_id == country.id).order_by(models.Clue.order).all()
+        if not clues:
+            raise HTTPException(status_code=500, detail="País do desafio não possui pistas cadastradas.")
+        first_clue_text = clues[0].text
+        total_clues_count = len(clues)
         
     return schemas.DailyChallengeResponse(
         date=str(get_today_date()) if not seed else "Modo Infinito",
-        total_clues=len(clues),
-        first_clue=clues[0].text
+        total_clues=total_clues_count,
+        first_clue=first_clue_text
     )
 
 def list_all_countries(db: Session):
     countries = db.query(models.Country.name).order_by(models.Country.name).all()
     return [c[0] for c in countries]
+
+def get_extra_hint(db: Session, seed: str = None):
+    country = get_challenge_country(db, seed)
+    if not country:
+        raise HTTPException(status_code=404, detail="País não encontrado.")
+    first_letter = country.name[0].upper()
+    return {"extra_hint": f"O país começa com a letra {first_letter}"}
 
 def process_guess(db: Session, request: schemas.GuessRequest, user_id: str = None):
     country = get_challenge_country(db, request.seed)
@@ -75,8 +113,17 @@ def process_guess(db: Session, request: schemas.GuessRequest, user_id: str = Non
 
     is_correct = normalize_str(request.guess) == normalize_str(country.name)
     
-    clues = db.query(models.Clue).filter(models.Clue.country_id == country.id).order_by(models.Clue.order).all()
-    all_clues_list = [c.text for c in clues]
+    all_clues_list = []
+    if request.seed:
+        from app.models.models import InfiniteClueCache
+        import json
+        cached = db.query(InfiniteClueCache).filter(InfiniteClueCache.seed == request.seed).first()
+        if cached:
+            all_clues_list = json.loads(cached.clues_json)
+    
+    if not all_clues_list:
+        clues = db.query(models.Clue).filter(models.Clue.country_id == country.id).order_by(models.Clue.order).all()
+        all_clues_list = [c.text for c in clues]
 
     def record_progress(won: bool):
         if not user_id or request.seed:
@@ -97,7 +144,7 @@ def process_guess(db: Session, request: schemas.GuessRequest, user_id: str = Non
                 user_id=int(user_id),
                 date=today,
                 won=1 if won else 0,
-                clues_used=len(clues) if not won else request.current_clue_index
+                clues_used=len(all_clues_list) if not won else request.current_clue_index
             )
             db.add(progress)
             db.commit()
@@ -113,8 +160,8 @@ def process_guess(db: Session, request: schemas.GuessRequest, user_id: str = Non
     else:
         next_index = request.current_clue_index
         
-        if next_index < len(clues):
-            next_clue = clues[next_index].text
+        if next_index < len(all_clues_list):
+            next_clue = all_clues_list[next_index]
             return schemas.GuessResponse(
                 correct=False,
                 message=f"Não é {request.guess}.",
