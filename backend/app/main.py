@@ -1,4 +1,5 @@
 from fastapi.middleware.cors import CORSMiddleware
+from dotenv import load_dotenv
 from fastapi import FastAPI
 import socket
 import os
@@ -11,6 +12,7 @@ from app.models import models
 models.Base.metadata.create_all(bind=engine)
 
 app = FastAPI(title="GeoQuest API")
+load_dotenv()
 
 def get_local_ip():
     try:
