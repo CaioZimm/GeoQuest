@@ -9,6 +9,21 @@ export const fetchDailyChallenge = async (gameSeed: string | null) => {
   return res.json();
 };
 
+export const fetchRandomChallenge = async () => {
+  const randomSeed = "inf_" + Math.random().toString(36).substring(2, 15);
+  const challenge = await fetchDailyChallenge(randomSeed);
+  return { challenge, seed: randomSeed };
+};
+
+export const fetchExtraHint = async (gameSeed: string | null) => {
+  const url = gameSeed ? `${API_URL}/api/daily-challenge/extra-hint?seed=${gameSeed}` : `${API_URL}/api/daily-challenge/extra-hint`;
+  const res = await fetch(url);
+  if (!res.ok) {
+    throw new Error("Erro ao buscar dica extra");
+  }
+  return res.json();
+};
+
 export const submitGuess = async (guess: string, currentClueIndex: number, gameSeed: string | null, token: string | null = null) => {
   const headers: Record<string, string> = { "Content-Type": "application/json" };
   if (token) {
